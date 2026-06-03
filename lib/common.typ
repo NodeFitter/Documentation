@@ -6,6 +6,6 @@
 #let linkColor = blue
 
 #let authors = (
-  lorenzo: (name: "Lorenzo", surname: "Caraffini", stid: "267428"),
-  matteo: (name: "Matteo", surname: "Schievano", stid: "265989"),
+  lorenzo: (name: "Lorenzo", surname: "Caraffini", stid: "267428", email: "test.test@studenti.unitn.it"),
+  matteo: (name: "Matteo", surname: "Schievano", stid: "265989", email: "matteo.schievano@studenti.unitn.it"),
 )
