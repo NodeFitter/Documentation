@@ -75,7 +75,7 @@
 
     \
     #figure(
-      caption: [Simplified flow of an individual autoscaler loop]
+      caption: [Simplified flow of an individual autoscaler loop],
     )[
       #align(center)[
         #chronos.diagram({
@@ -108,8 +108,7 @@
     #figure(
       caption: [Diagram for the project environment],
     )[
-      #underline[THIS SHOULD BE CHANGED WITH AN UPDATED DIAGRAM]
-      #image("img/Env_diagram.png", width: 20cm)
+      #image("img/Arch(itecture).png", width: 90%)
     ]
 
     OpenNebula will be installed using MiniOne (much like the
@@ -130,11 +129,15 @@
     manual modifications to the cluster or to aid with the in-person
     demonstration.
 
-    == Possible improvements in complexity
-    + Multiple types of worker nodes to introduce scheduling limitations
-      related to labels
-    + Network policies to restrict traffic between different types of
-      nodes and the outside
+    == Possible complexity improvements
+
+    In order to improve the proposal, some additional improvements can be potentially implemented based on the complexity goal.
+
+    Firstly, instead of allowing the scheduler to schedule pods in every node that is currently part of the cluster, nodes can be configured to only be able to host certain type of pods. This could be achieved by using labels.
+
+    Then, the autoscaler should configure the new VMs by automatically set up the appropriate label for the hosted node based on what is requested.
+
+    Lastly, an additional improvements could be about network policies: for security reasons, it would be important that only pods with a certain label should be able to contact another pod with a different label.
   ],
   [#projectName],
   [Project proposal],
