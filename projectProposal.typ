@@ -1,6 +1,9 @@
 #import "./lib/common.typ": authors, course, projectName, university, authors
 #import "./lib/commonReport.typ": docBody, firstPage, indexPage
 
+#import "@preview/chronos:0.3.0"
+
+
 #firstPage([#course], "Project proposal")
 
 #pagebreak()
@@ -33,28 +36,105 @@
       caption: "Group information summary table",
     )
 
-    == Project proposal description
+    == The Problem
 
-    The #course course at the #university requires the creation of a project which demonstrate the knowledge acquired by the students. \
-    Given the opportunity to openly choose a problem and proposing a solution, this group would like to proceed as follows.
+    Kubernetes is already a quite capable tool, offering pretty much
+    all you could ever ask for when it comes to container
+    orchestration.
+    Two particularly useful features for managing large
+    clusters are Horizontal and Vertical Pod Autoscaling, which allow
+    Kubernetes to adjust the number of pods and the resources assigned
+    to them respectively. These functionalities help ensuring that
+    the cluster can grow to meet demand as well as shrink to avoid
+    wasting resources while they are not needed.
 
-    In a cloud-oriented environment, virtualization is a fundamental aspect, independently from the chosen method: Virtual Machines (VMs) or containers. Generally, in order to orchestrate containers, a solution like Kubernetes is used, which, under proper configuration, deploys pods and balance network traffic between them.
+    The scaling of a cluster's resources is limited to what the nodes
+    are physically able to provide. The provisioning of
+    nodes is outside of Kubernetes' scope and must therefore be
+    handled externally. This can be done with an external application
+    that interacts with both Kubernetes' API and the cloud proviser's
+    API.
 
-    However, an important limitation is present: containers, like any other application, run over a machine, but Kubernetes has no native functionality regarding the automatic deploy of new VMs when the ones available are not sufficient to cover the various users' requests.
+    The focus of this project is to bridge the gap between the
+    infrastructure handling nodes and Kubernetes handling pods,
+    with the goals of:
+    - Allowing for new nodes to be created to host pods that would not
+      otherwise fit in the existing nodes.
+    - Removing nodes that are deemed unnecessary for hosting the
+      current workload.
 
-    The project proposal of this group consists in the creation of scheduler which periodically checks available resources and automatically deploys new VMs when such availability goes under a certain alarm threshold. Naturally, the scheduler must also delete VMs when those additional resources are no longer required.
-
-    For demonstration purposes, this group would also like to create a basic application which offers some sort of functionality, like an authentication service, accessible by users: since software engineering principles dictate the division of an application into application, business and persistence logic, it will not be possible for Kubernetes to schedule new pods containing the mentioned logics in every VM, but every VM will be able to host only one type of logic and the scheduler will be required to automatically setup the new VM for accepting only specific type of pods (for example, a VM will be setup as eligible for pods containing the application logic of the service only) based on the resources needed for each type of logic.
-
-    Finally, users should not be able to contact the business and persistence logic and the application logic should not be able to contact the persistence logic directly: for this reason, network policies should be created to allow users to only contact the application logic and for the persistence logic to only be contacted by the network logic.
-
-    The system, as a whole, has been provisionally named by this group as *CloudedLogin*.
-
-    = Proposed technologies
+    Specifically, we want to implement an autoscaler capable of
+    dynamically expanding or shrinking a cluster hosted in nodes created
+    with OpenNebula.
 
 
-    = Proposed architecture
+    = Project Proposal Details and Architecture
+    Our solution is an application that periodically checks the
+    cluster status and decides whether or not it is necessary to scale
+    the cluster up or down using OpenNebula's API.
 
+    \
+    #figure(
+      caption: [Simplified flow of an individual autoscaler loop]
+    )[
+      #align(center)[
+        #chronos.diagram({
+          import chronos: *
+          _par("K", display-name: "Kubernetes")
+          _par("A", display-name: "Autoscaler")
+          _par("N", display-name: "OpenNebula")
+
+          _seq("A", "K", comment: "Get cluster status")
+          _seq("K", "A", comment: "Status")
+
+          _seq("A", "A", comment: "Evaluation")
+
+          _seq("A", "N", comment: "Scaling request")
+          _seq("N", "A", comment: "Response")
+        })
+      ]
+    ]
+
+    \
+    The environment for project demonstration will be structured as
+    follows:
+    - A machine running a Linux OS with OpenNebula installed
+    - A set of OpenNebula managed VMs, all part of a Kubernetes cluster
+      - A Master node containing the Kubernetes Control Plane and the
+        autoscaler application
+      - Worker nodes running code that simulates work
+
+    Below is a diagram representing the structure of this environment:
+    #figure(
+      caption: [Diagram for the project environment],
+    )[
+      #underline[THIS SHOULD BE CHANGED WITH AN UPDATED DIAGRAM]
+      #image("img/Env_diagram.png", width: 20cm)
+    ]
+
+    OpenNebula will be installed using MiniOne (much like the
+    environment for the class lab activities).\
+    There are several options for running Kubernetes. We have
+    decided to diverge from the lab environment and use `kubeadm`
+    instead of `minikube` for our installation due to limitations
+    related to working with multiple nodes.\
+
+    // The cluster network will be configured with the appropriate
+    // security policies to ensure no communication can take place
+    // unless deemed strictly necessary.
+
+    \
+    The application will be written in Go, mainly because of previous
+    experience both group members have with the language. An additional
+    "controller" tool could be also developed to provide a way to do
+    manual modifications to the cluster or to aid with the in-person
+    demonstration.
+
+    == Possible improvements in complexity
+    + Multiple types of worker nodes to introduce scheduling limitations
+      related to labels
+    + Network policies to restrict traffic between different types of
+      nodes and the outside
   ],
   [#projectName],
   [Project proposal],
