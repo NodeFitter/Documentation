@@ -100,7 +100,7 @@
     follows:
     - A machine running a Linux OS with OpenNebula installed
     - A set of OpenNebula managed VMs, all part of a Kubernetes cluster
-      - A Master node containing the Kubernetes Control Plane and the
+      - A Master Node containing the Kubernetes Control Plane and the
         autoscaler application
       - Worker nodes running code that simulates work
 
@@ -118,9 +118,8 @@
     instead of `minikube` for our installation due to limitations
     related to working with multiple nodes.\
 
-    // The cluster network will be configured with the appropriate
-    // security policies to ensure no communication can take place
-    // unless deemed strictly necessary.
+    A logging service will be deployed in every node via a
+    DaemonSet to perform audits and improve traceability.
 
     \
     The application will be written in Go, mainly because of previous
