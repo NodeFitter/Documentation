@@ -1,4 +1,4 @@
-#import "./common.typ": authors, course, linkColor, mainColor, projectName, university
+#import "./common.typ": authors, course, linkColor, mainColor, projectName, subTitle, university
 
 #let firstPage(title, docType) = {
   show link: set text(fill: linkColor)
@@ -20,15 +20,16 @@
     [
       #align(center + horizon)[#text(size: 3em, weight: "bold")[#title]]
 
-      #align(center + horizon)[#image("../img/mdi--cloud-key.svg", width: 30%) #text(
+      #align(center + horizon)[#image("../img/mdi--cloud-cog.svg", width: 30%) #text(
           size: 2em,
           weight: "bold",
         )[#projectName]]
 
-      #align(center + horizon)[#text(size: 1.5em, weight: "bold")[#docType]]
+      #align(center + horizon)[#text(size: 1.2em, weight: "bold")[#v(-1em)#subTitle]]
 
       #v(10em)
 
+      #align(center + horizon)[#text(size: 1.3em, weight: "bold")[#docType]]
       #align(left)[
         #table(
           stroke: none,

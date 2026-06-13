@@ -2,7 +2,8 @@
 #let mainColor = rgb("B10B25")
 #let university = "University of Trento"
 #let date = [May 6#super("th"), 2026]
-#let projectName = "CloudedLogin"
+#let projectName = "NodeFitter"
+#let subTitle = "An autoscaler for OpenNebula"
 #let linkColor = blue
 
 #let authors = (
