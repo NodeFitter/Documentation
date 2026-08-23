@@ -22,8 +22,13 @@
         },
 
         table.header([*Student*], [*Student Id*], [*Email*]),
-        [#authors.lorenzo.name #authors.lorenzo.surname], [#authors.lorenzo.stid], [#authors.lorenzo.email],
-        [#authors.matteo.name #authors.matteo.surname], [#authors.matteo.stid], [#authors.matteo.email],
+        [#authors.lorenzo.name #authors.lorenzo.surname],
+        [#authors.lorenzo.stid],
+        [#link("mailto:" + authors.lorenzo.email)[#authors.lorenzo.email]],
+
+        [#authors.matteo.name #authors.matteo.surname],
+        [#authors.matteo.stid],
+        [#link("mailto:" + authors.matteo.email)[#authors.matteo.email]],
       ),
       caption: "Group information summary table",
     )

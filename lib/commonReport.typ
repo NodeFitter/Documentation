@@ -3,7 +3,7 @@
 #let firstPage(title, docType) = {
   show link: set text(fill: linkColor)
   set document(
-    title: [#title - #course - #university],
+    title: [#projectName - #course - #university],
     author: (
       authors.lorenzo.name + " " + authors.lorenzo.surname + " - Student Id " + authors.lorenzo.stid,
       authors.matteo.name + " " + authors.matteo.surname + " - Student Id " + authors.matteo.stid,
