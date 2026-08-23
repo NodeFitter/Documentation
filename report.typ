@@ -81,7 +81,7 @@
 
     In order for the autoscaler to work properly, an initial setup of OpenNebula is needed. Specifically, the autoscaler will check upon starting up what VMs are currently running and from what template they have been instantiated from. If the autoscaler detects the presence of templates with no currently running VMs, the software will automatically create one VM per type of template. Additionally, every template has to be associated with an OpenNebula's VM group: this will allow to logically group VMs that will run the same type of pods. Specifically, when a VM will start and join the cluster, it will automatically have a kubernetes label ```env type=<VM-group-name>```: our deployment has been set up to only schedule a pod with the same label on node having the same exact label. For example, the frontend application will have label ```env type=frontend```, therefore it has been set up that such pod can be scheduled only on node with label ```env type=frontend```.
 
-    NodeFitter uses two criteria to understand wether a new VM is necessary. Specifically, given an existing VM, a VM of the same type (in other words, instantiated from the same template) has to be created if:
+    NodeFitter uses two criteria to understand wether a new VM is necessary. Specifically, given an existing VM and assuming that the current number of VMs is under a configurable amount, a VM of the same type (in other words, instantiated from the same template) has to be created if:
     - the amount of *free memory* is *under* a certain configurable *threshold*;
     - the amount of *available CPU* is *under* a certain configurable *threshold*.
 
@@ -124,7 +124,7 @@
       ],
     )
 
-    Every time a new VM is detected, spawned or cloned, the autoscaler associate with such VM a configurable safe guard period: when the safe period is active, the VM cannot be deleted. This prevents the VM to be deleted while joining the cluster and waiting for a new pod to be scheduled on itself or to be deleted because Kubernetes chose to momentarily de-schedule a pod.
+    Every time a new VM is detected, spawned or cloned, the autoscaler associate with such VM a configurable safe guard period: when the safe period is active, the VM cannot be deleted. This prevents the VM to be deleted while joining the cluster and waiting for a new pod to be scheduled on itself or to be cloned repeatedly. Additionally, the autoscaler will not delete a VM if that VM is the only one of its type.
 
     The autoscaler check if a new VM needs to be scheduled regularly, but not continuously: an appropriate "cycle time" has to be chosen carefully and can be written in the autoscaler configuration.
 
