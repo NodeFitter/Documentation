@@ -103,7 +103,7 @@
   set heading(numbering: "1.")
 
   show heading.where(level: 1): h => {
-    set text(size: 1.5em)
+    set text(size: 1.3em)
     pagebreak()
     h
     v(0.25em)
