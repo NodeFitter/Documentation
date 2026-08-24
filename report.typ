@@ -5,6 +5,8 @@
 
 #docBody(
   [
+    #counter(page).update(1)
+
     = Introduction
 
     == Group information
@@ -71,15 +73,15 @@
 
     = Solution
 
-    Regarding the proposed solution, NodeFitter is capable of interacting with OpenNebula via OpenNebula's API for the *go* language: based on memory and cpu consumption of every VM, the autoscaler automatically creates VMs upon resource deficit and makes them join the already existing Kubernetes cluster. At the same time, if a deployed VM does not host any pods, the autoscaler will automatically delete and remove from the cluster said VM.
+    Regarding the proposed solution, NodeFitter is capable of interacting with OpenNebula via OpenNebula's API for the *Go* language: based on memory and cpu consumption of every VM, the autoscaler automatically creates VMs upon resource deficit and makes them join the already existing Kubernetes cluster. At the same time, if a deployed VM does not host any pods, the autoscaler will automatically delete and remove from the cluster said VM.
 
-    To effectively test *NodeFitter* capabilities, we developed a simple *go application* which exposes various endpoints, and deployed a *mariadb database* as a backend without persistency: both entity expose a counter uses by *horizontal pod autoscalers* (one for each of the components) to deploy new pods, while the different endpoints of the frontend application allow to test the two scaling together or independently.
+    To effectively test *NodeFitter* capabilities, we developed a simple *Go application* which exposes various endpoints, and deployed a *mariadb database* as a backend without persistency: both entity expose a counter uses by *horizontal pod autoscalers* (one for each of the components) to deploy new pods, while the different endpoints of the frontend application allow to test the two scaling together or independently.
 
     Finally, to satisfy the security requirement, *network policies* have been implemented to allow only the necessary connection between components, and logs of the various pods are automatically collected and pushed to a *loki* container, which interaction are possible via the *grafana* user interface.
 
-    == OpenNebula Virtual Machines
+    == Autoscaler and OpenNebula
 
-    In order for the autoscaler to work properly, an initial setup of OpenNebula is needed. Specifically, the autoscaler will check upon starting up what VMs are currently running and from what template they have been instantiated from. If the autoscaler detects the presence of templates with no currently running VMs, the software will automatically create one VM per type of template. Additionally, every template has to be associated with an OpenNebula's VM group: this will allow to logically group VMs that will run the same type of pods. Specifically, when a VM will start and join the cluster, it will automatically have a kubernetes label ```env type=<VM-group-name>```: our deployment has been set up to only schedule a pod with the same label on node having the same exact label. For example, the frontend application will have label ```env type=frontend```, therefore it has been set up that such pod can be scheduled only on node with label ```env type=frontend```.
+    When started, the autoscaler will check upon starting up what VMs are currently running and from what template they have been instantiated from. If the autoscaler detects the presence of templates with no currently running VMs, the software will automatically create one VM per type of template. Additionally, every template has to be associated with an OpenNebula's VM group: this will allow to logically group VMs that will run the same type of pods. Specifically, when a VM will start and join the cluster, it will automatically have a kubernetes label ```env type=<VM-group-name>```: our deployment has been set up to only schedule a pod with the same label on node having the same exact label. For example, the frontend application will have label ```env type=frontend```, therefore it has been set up that such pod can be scheduled only on node with label ```env type=frontend```.
 
     NodeFitter uses two criteria to understand wether a new VM is necessary. Specifically, given an existing VM and assuming that the current number of VMs is under a configurable amount, a VM of the same type (in other words, instantiated from the same template) has to be created if:
     - the amount of *free memory* is *under* a certain configurable *threshold*;
@@ -96,7 +98,7 @@
       [
         #figure(
           kind: "config",
-          supplement: "Configuration example",
+          supplement: "Configuration",
           caption: "kubeadm join configuration",
           text()[
             ```yaml
@@ -124,17 +126,47 @@
       ],
     )
 
-    Every time a new VM is detected, spawned or cloned, the autoscaler associate with such VM a configurable safe guard period: when the safe period is active, the VM cannot be deleted. This prevents the VM to be deleted while joining the cluster and waiting for a new pod to be scheduled on itself or to be cloned repeatedly. Additionally, the autoscaler will not delete a VM if that VM is the only one of its type.
+    Every time a new VM is detected or cloned, the autoscaler associate with such VM a configurable safe guard period: when the safe period is active, the VM cannot be deleted. This prevents the VM to be deleted while joining the cluster and waiting for a new pod to be scheduled on itself or to be cloned repeatedly. Additionally, the autoscaler will not delete a VM if that VM is the only one of its type.
 
     The autoscaler check if a new VM needs to be scheduled regularly, but not continuously: an appropriate "cycle time" has to be chosen carefully and can be written in the autoscaler configuration.
 
     When a *VM* has *no pod of its type scheduled* on itself, provided that a safe guard is not active, it is firstly deleted from OpenNebula, then NodeFitter will contact the Kubernetes control plane to *delete the node* from the cluster.
 
-    Finally, to interact with the autoscaler, a simple CTL, #link("https://github.com/NodeFitter/ScalerCtl")[*ScalerCtl*] who communicates with the autoscaler via unix sockets, has been created: more information available in the #link("https://github.com/NodeFitter/ScalerCtl/blob/main/README.md")[README].
+    Finally, to run NodeFitter it is highly suggested to use the provided #link("https://github.com/NodeFitter/Submission/blob/main/nodefitter/compose.yml")[docker compose] that also includes a simple CLI, #link("https://github.com/NodeFitter/ScalerCtl")[*ScalerCtl*], who communicates with the autoscaler via unix sockets: more information available in the #link("https://github.com/NodeFitter/ScalerCtl/blob/main/README.md")[README].
 
-    == Kubernetes
+    == Deployment with Kubernetes
 
+    Regarding the demo's deployment, this group created a simple Go application that retrieves a random number from a mariadb database and then proceed to update it with another random number. Additionally, *prometheus*, the *prometheus adapter*, *loki*, *fluent-bit* and *grafana* have been installed and deployed using helm, allowing the cluster to collect metrics for the two horizontal pod autoscalers and also log aggregation, displayable in grafana.
 
+    The application and the database live in two separate pods, each in its own namespace (*frontend* and *backend*, respectively) and they are both configured to send metrics for pods autoscaling purposes. Metrics collection services are deployed within a dedicated *monitoring* namespace.
+
+    Load balancing of requests for the Go application is made possible thanks to a *LoadBalancer* service, while the mariadb's pods are under a *ClusterIP* service since it should be accessible from inside the cluster only.
+
+    The Go application contains different endpoints that triggers different metrics updates, allowing to independently test the frontend and the backend namespace's horizontal pods autoscalers (HPAs).
+
+    Specifically, in this deployment the frontend and backend pods are scaled horizontally depending on the amount of requests they receive, information that are available thanks to prometheus.
+
+    Sensitive information, such as mariadb's credentials and connection string, are provided to the pods via Kubernetes secrets, initialized in the #link("https://github.com/NodeFitter/Deployment/blob/main/run.sh")[deployment script] and read from dedicated `.env` files.
+
+    In order to preserve logs and the grafana configuration, persistent volume claims are requested in the #link("https://github.com/NodeFitter/Deployment/blob/main/helmCharts/lokiChart.yaml")[helm value chart fo loki] and in the #link("https://github.com/NodeFitter/Deployment/blob/main/k8s/monitoring.yml")[monitoring yaml] respectively, using a storage class called `local-path`, exposed by a provisioner called #link("https://github.com/rancher/local-path-provisioner")[rancher], which will automatically create the persistent volumes. Despite the database pod intuitively needing persistency, this group decided to avoid it for demo purposes.
+
+    In order to satisfy the security requirements, the deployment automatically sets up some network policy in each of the mentioned namespaces.
+
+    Specifically, all network policies contain ingress and egress rules:
+    - the pods in the *frontend* namespace accept inbound connection from everyone on port 8080 and only from prometheus on port 9090, in order for it to be able to retrieve the custom metrics, while outbound connection are allowed to the backend namespace's pods only;
+    - the pods in the *backend* namespace accept inbound traffic only from the frontend's pods and from prometheus;
+    - the pods in the *monitoring* namespace have specific sets of rules:
+      - *grafana* allows access to its frontend (port 3000) from every source, while allowing outbound connection only to prometheus and loki;
+      - *prometheus*, the component that collects metrics, allows inbound traffic only from grafana and the prometheus adapter, while it allows outbound traffic to the frontend and backend in order to make metrics retrieval possible;
+      - *loki*, the log collector, allow inbound connectivity only from fluent-bit pods, grafana and the loki-canary pods;
+      - *prometheus adapter*, component that makes custom metrics available to the HPAs, allow inbound access from every source to collect the custom metrics, while allowing outbound traffic only to prometheus to collect the necessary metrics;
+      - *fluent-bit*, the component that pushes logs from pods to loki, deployed in every node via daemonSet, allows outbound traffic to loki.
+
+    In addition, every pod have granted access to the Kubernetes DNS (`kube-dns`) service which is deployed the `kube-system` namespace.
+
+    Finally, a calico custom network policy had to be added to allow monitoring pods to access the Kubernetes API deployed under the default namespace.
+
+    It is possible to read the various network policies, as well as the various services, in the `yaml` files under the #link("https://github.com/NodeFitter/Deployment/tree/main/k8s")[K8s folder].
 
   ],
   [#projectName],
