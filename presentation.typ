@@ -39,7 +39,7 @@
     #text(size: 2em)[
 
       #grid(
-        columns: (50%, 50%),
+        columns: (40%, 60%),
         align: (x, y) => {
           if (x == 0) {
             left
@@ -55,7 +55,7 @@
           - VMs scheduling and descheduling is done according to currently available resources in existing nodes
         ],
         [
-          #image("img/mdi--cloud-cog.svg", width: 50%)
+          #image("img/Arch(itecture).png", width: 100%)
         ],
       )
 
