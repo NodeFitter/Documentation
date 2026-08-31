@@ -105,7 +105,14 @@
         ]
       ],
       [
-        #image("img/mdi--cloud-cog.svg", width: 50%)
+        #grid(
+          columns: 2,
+          gutter: 2em,
+          image("img/kubernetes_logo.svg", width: 70%),
+          image("img/grafana_logo_icon_171048.png", width: 70%),
+          image("img/prometheus_logo_icon_248769.png", width: 70%),
+          image("img/fluentbit_logo_icon_248530.png", width: 70%)
+        )
       ],
     )
   ]
